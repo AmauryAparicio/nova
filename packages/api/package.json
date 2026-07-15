@@ -1,0 +1,29 @@
+{
+  "name": "@nova/api",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@nova/auth": "workspace:*",
+    "@nova/db": "workspace:*",
+    "@nova/env": "workspace:*",
+    "@trpc/client": "catalog:",
+    "@trpc/server": "catalog:",
+    "@types/pg": "catalog:",
+    "dotenv": "catalog:",
+    "drizzle-orm": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@nova/config": "workspace:*",
+    "hono": "catalog:",
+    "typescript": "^6"
+  }
+}
