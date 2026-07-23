@@ -5,12 +5,6 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  server: {
-    port: 3001,
-  },
-  resolve: {
-    tsconfigPaths: true,
-  },
   plugins: [
     tailwindcss(),
     tanstackStart({
@@ -21,6 +15,12 @@ export default defineConfig({
     nitro(),
     viteReact(),
   ],
+  resolve: {
+    tsconfigPaths: true,
+  },
+  server: {
+    port: 3001,
+  },
   // Bundle all SSR deps: Vercel functions have no node_modules at runtime
   ssr: {
     noExternal: true,

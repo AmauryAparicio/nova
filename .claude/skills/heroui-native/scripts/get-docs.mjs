@@ -3,32 +3,45 @@
  * Get non-component HeroUI Native documentation (guides, theming, releases).
  *
  * Usage:
- *   node get_docs.mjs /docs/native/getting-started/theming
- *   node get_docs.mjs /docs/native/releases/beta-12
+ *   node get-docs.mjs /docs/native/getting-started/theming
+ *   node get-docs.mjs /docs/native/releases/beta-12
  *
  * Output:
  *   MDX documentation content
  *
- * Note: For component docs, use get_component_docs.mjs instead.
+ * Note: For component docs, use get-component-docs.mjs instead.
  */
 
-const API_BASE = process.env.HEROUI_NATIVE_API_BASE || "https://native-mcp-api.heroui.com";
+const API_BASE =
+  process.env.HEROUI_NATIVE_API_BASE || "https://native-mcp-api.heroui.com";
 const FALLBACK_BASE = "https://heroui.com";
 const APP_PARAM = "app=native-skills";
+const LEADING_SLASH_REGEX = /^\//;
+
+/**
+ * Strip the /docs/ prefix (or a single leading slash) from a path so it
+ * matches the v1 API's expected format: native/getting-started/theming
+ * (route is /v1/docs/:path(*)).
+ */
+function stripDocsPrefix(path) {
+  if (path.startsWith("/docs/")) {
+    return path.slice(6); // Remove /docs/ prefix
+  }
+
+  if (path.startsWith("/")) {
+    return path.slice(1); // Remove leading /
+  }
+
+  return path;
+}
 
 /**
  * Fetch documentation from HeroUI Native API.
  * Uses v1 endpoint pattern: /v1/docs/:path
  */
 async function fetchApi(path) {
-  // The v1 API expects path without /docs/ prefix
   // Input: /docs/native/getting-started/theming
-  // API expects: native/getting-started/theming (route is /v1/docs/:path(*))
-  let apiPath = path.startsWith("/docs/")
-    ? path.slice(6) // Remove /docs/ prefix
-    : path.startsWith("/")
-      ? path.slice(1) // Remove leading /
-      : path;
+  const apiPath = stripDocsPrefix(path);
 
   const separator = "?";
   const url = `${API_BASE}/v1/docs/${apiPath}${separator}${APP_PARAM}`;
@@ -36,7 +49,7 @@ async function fetchApi(path) {
   try {
     const response = await fetch(url, {
       headers: { "User-Agent": "HeroUI-Native-Skill/1.0" },
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(30_000),
     });
 
     if (!response.ok) {
@@ -58,7 +71,7 @@ async function fetchApi(path) {
  */
 async function fetchFallback(path) {
   // Ensure path starts with /docs and ends with .mdx
-  let cleanPath = path.replace(/^\//, "");
+  let cleanPath = path.replace(LEADING_SLASH_REGEX, "");
 
   if (!cleanPath.endsWith(".mdx")) {
     cleanPath = `${cleanPath}.mdx`;
@@ -69,7 +82,7 @@ async function fetchFallback(path) {
   try {
     const response = await fetch(url, {
       headers: { "User-Agent": "HeroUI-Native-Skill/1.0" },
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(30_000),
     });
 
     if (!response.ok) {
@@ -97,8 +110,10 @@ async function main() {
   const args = process.argv.slice(2);
 
   if (args.length === 0) {
-    console.error("Usage: node get_docs.mjs <path>");
-    console.error("Example: node get_docs.mjs /docs/native/getting-started/theming");
+    console.error("Usage: node get-docs.mjs <path>");
+    console.error(
+      "Example: node get-docs.mjs /docs/native/getting-started/theming"
+    );
     console.error();
     console.error("Available paths include:");
     console.error("  /docs/native/getting-started/theming");
@@ -106,24 +121,31 @@ async function main() {
     console.error("  /docs/native/getting-started/styling");
     console.error("  /docs/native/releases/beta-12");
     console.error();
-    console.error("Note: For component docs, use get_component_docs.mjs instead.");
+    console.error(
+      "Note: For component docs, use get-component-docs.mjs instead."
+    );
     process.exit(1);
   }
 
-  const path = args[0];
+  const [path] = args;
 
   // Check if user is trying to get component docs
   if (path.includes("/components/")) {
-    console.error("# Warning: Use get_component_docs.mjs for component documentation.");
+    console.error(
+      "# Warning: Use get-component-docs.mjs for component documentation."
+    );
     const componentName = path.split("/").pop().replace(".mdx", "");
-    const titleCase = componentName.charAt(0).toUpperCase() + componentName.slice(1);
+    const titleCase =
+      componentName.charAt(0).toUpperCase() + componentName.slice(1);
 
-    console.error(`# Example: node get_component_docs.mjs ${titleCase}`);
+    console.error(`# Example: node get-component-docs.mjs ${titleCase}`);
   }
 
   // Validate Native path
   if (!path.startsWith("/docs/native/")) {
-    console.error("# Warning: Native documentation paths should start with /docs/native/");
+    console.error(
+      "# Warning: Native documentation paths should start with /docs/native/"
+    );
     console.error(`# Provided path: ${path}`);
   }
 
@@ -132,7 +154,7 @@ async function main() {
   // Try API first
   const data = await fetchApi(path);
 
-  if (data && data.content) {
+  if (data?.content) {
     data.source = "api";
     console.log(data.content);
 

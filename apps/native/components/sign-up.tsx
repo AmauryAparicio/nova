@@ -9,21 +9,34 @@ import {
   TextField,
   useToast,
 } from "heroui-native";
-import { useRef } from "react";
-import { Text, TextInput, View } from "react-native";
+import { useCallback, useRef } from "react";
+import { Text, type TextInput, View } from "react-native";
 import z from "zod";
 
 import { authClient } from "@/lib/auth-client";
 import { queryClient } from "@/utils/trpc";
 
 const signUpSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").min(2, "Name must be at least 2 characters"),
-  email: z.string().trim().min(1, "Email is required").email("Enter a valid email address"),
-  password: z.string().min(1, "Password is required").min(8, "Use at least 8 characters"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Use at least 8 characters"),
 });
 
 function getErrorMessage(error: unknown): string | null {
-  if (!error) return null;
+  if (!error) {
+    return null;
+  }
 
   if (typeof error === "string") {
     return error;
@@ -56,56 +69,71 @@ export function SignUp() {
 
   const form = useForm({
     defaultValues: {
-      name: "",
       email: "",
+      name: "",
       password: "",
-    },
-    validators: {
-      onSubmit: signUpSchema,
     },
     onSubmit: async ({ value, formApi }) => {
       await authClient.signUp.email(
         {
-          name: value.name.trim(),
           email: value.email.trim(),
+          name: value.name.trim(),
           password: value.password,
         },
         {
           onError(error) {
             toast.show({
-              variant: "danger",
               label: error.error?.message || "Failed to sign up",
+              variant: "danger",
             });
           },
           onSuccess() {
             formApi.reset();
             toast.show({
-              variant: "success",
               label: "Account created successfully",
+              variant: "success",
             });
             queryClient.refetchQueries();
           },
-        },
+        }
       );
+    },
+    validators: {
+      onSubmit: signUpSchema,
     },
   });
 
-  return (
-    <Surface variant="secondary" className="p-4 rounded-lg">
-      <Text className="text-foreground font-medium mb-4">Create Account</Text>
+  type SignUpFormState = Parameters<
+    NonNullable<Parameters<typeof form.Subscribe>[0]["selector"]>
+  >[0];
 
-      <form.Subscribe
-        selector={(state) => ({
-          isSubmitting: state.isSubmitting,
-          validationError: getErrorMessage(state.errorMap.onSubmit),
-        })}
-      >
+  const selectFormState = useCallback(
+    (state: SignUpFormState) => ({
+      isSubmitting: state.isSubmitting,
+      validationError: getErrorMessage(state.errorMap.onSubmit),
+    }),
+    []
+  );
+
+  const focusEmailInput = useCallback(() => {
+    emailInputRef.current?.focus();
+  }, []);
+
+  const focusPasswordInput = useCallback(() => {
+    passwordInputRef.current?.focus();
+  }, []);
+
+  return (
+    <Surface className="rounded-lg p-4" variant="secondary">
+      <Text className="mb-4 font-medium text-foreground">Create Account</Text>
+
+      <form.Subscribe selector={selectFormState}>
         {({ isSubmitting, validationError }) => {
           const formError = validationError;
 
           return (
             <>
-              <FieldError isInvalid={!!formError} className="mb-3">
+              <FieldError className="mb-3" isInvalid={!!formError}>
                 {formError}
               </FieldError>
 
@@ -115,17 +143,15 @@ export function SignUp() {
                     <TextField>
                       <Label>Name</Label>
                       <Input
-                        value={field.state.value}
+                        autoComplete="name"
+                        blurOnSubmit={false}
                         onBlur={field.handleBlur}
                         onChangeText={field.handleChange}
+                        onSubmitEditing={focusEmailInput}
                         placeholder="John Doe"
-                        autoComplete="name"
-                        textContentType="name"
                         returnKeyType="next"
-                        blurOnSubmit={false}
-                        onSubmitEditing={() => {
-                          emailInputRef.current?.focus();
-                        }}
+                        textContentType="name"
+                        value={field.state.value}
                       />
                     </TextField>
                   )}
@@ -136,20 +162,18 @@ export function SignUp() {
                     <TextField>
                       <Label>Email</Label>
                       <Input
-                        ref={emailInputRef}
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChangeText={field.handleChange}
-                        placeholder="email@example.com"
-                        keyboardType="email-address"
                         autoCapitalize="none"
                         autoComplete="email"
-                        textContentType="emailAddress"
-                        returnKeyType="next"
                         blurOnSubmit={false}
-                        onSubmitEditing={() => {
-                          passwordInputRef.current?.focus();
-                        }}
+                        keyboardType="email-address"
+                        onBlur={field.handleBlur}
+                        onChangeText={field.handleChange}
+                        onSubmitEditing={focusPasswordInput}
+                        placeholder="email@example.com"
+                        ref={emailInputRef}
+                        returnKeyType="next"
+                        textContentType="emailAddress"
+                        value={field.state.value}
                       />
                     </TextField>
                   )}
@@ -160,24 +184,28 @@ export function SignUp() {
                     <TextField>
                       <Label>Password</Label>
                       <Input
-                        ref={passwordInputRef}
-                        value={field.state.value}
+                        autoComplete="new-password"
                         onBlur={field.handleBlur}
                         onChangeText={field.handleChange}
-                        placeholder="••••••••"
-                        secureTextEntry
-                        autoComplete="new-password"
-                        textContentType="newPassword"
-                        returnKeyType="go"
                         onSubmitEditing={form.handleSubmit}
+                        placeholder="••••••••"
+                        ref={passwordInputRef}
+                        returnKeyType="go"
+                        secureTextEntry
+                        textContentType="newPassword"
+                        value={field.state.value}
                       />
                     </TextField>
                   )}
                 </form.Field>
 
-                <Button onPress={form.handleSubmit} isDisabled={isSubmitting} className="mt-1">
+                <Button
+                  className="mt-1"
+                  isDisabled={isSubmitting}
+                  onPress={form.handleSubmit}
+                >
                   {isSubmitting ? (
-                    <Spinner size="sm" color="default" />
+                    <Spinner color="default" size="sm" />
                   ) : (
                     <Button.Label>Create Account</Button.Label>
                   )}

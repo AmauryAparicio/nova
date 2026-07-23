@@ -3,13 +3,14 @@
  * Get theme variables and design tokens for HeroUI Native.
  *
  * Usage:
- *   node get_theme.mjs
+ *   node get-theme.mjs
  *
  * Output:
  *   Theme variables organized by light/dark with HSL color format
  */
 
-const API_BASE = process.env.HEROUI_NATIVE_API_BASE || "https://native-mcp-api.heroui.com";
+const API_BASE =
+  process.env.HEROUI_NATIVE_API_BASE || "https://native-mcp-api.heroui.com";
 const APP_PARAM = "app=native-skills";
 
 // Fallback theme reference when API is unavailable
@@ -109,7 +110,7 @@ async function fetchApi(endpoint) {
   try {
     const response = await fetch(url, {
       headers: { "User-Agent": "HeroUI-Native-Skill/1.0" },
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(30_000),
     });
 
     if (!response.ok) {
@@ -144,7 +145,9 @@ function formatColors(colors) {
   const lines = [];
 
   for (const [category, tokens] of Object.entries(grouped)) {
-    lines.push(`  /* ${category.charAt(0).toUpperCase() + category.slice(1)} Colors */`);
+    lines.push(
+      `  /* ${category.charAt(0).toUpperCase() + category.slice(1)} Colors */`
+    );
     for (const token of tokens) {
       const name = token.name || "";
       const value = token.value || "";
@@ -168,14 +171,14 @@ async function main() {
   let data;
   let version;
 
-  if (!rawData) {
-    console.error("# API failed, using fallback theme reference...");
-    data = FALLBACK_THEME;
-    version = FALLBACK_THEME.latestVersion || "unknown";
-  } else {
+  if (rawData) {
     // Handle API response format
     data = rawData;
     version = rawData.latestVersion || "unknown";
+  } else {
+    console.error("# API failed, using fallback theme reference...");
+    data = FALLBACK_THEME;
+    version = FALLBACK_THEME.latestVersion;
   }
 
   // Output as formatted structure for readability
@@ -185,13 +188,13 @@ async function main() {
   console.log();
 
   // Light mode colors
-  if (data.light && data.light.colors) {
+  if (data.light?.colors) {
     console.log("/* Light Mode Colors */");
     console.log(formatColors(data.light.colors));
   }
 
   // Dark mode colors
-  if (data.dark && data.dark.colors) {
+  if (data.dark?.colors) {
     console.log("/* Dark Mode Colors */");
     console.log(formatColors(data.dark.colors));
   }

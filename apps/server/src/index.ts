@@ -4,8 +4,11 @@ import { appRouter } from "@nova/api/routers/index";
 import { auth } from "@nova/auth";
 import { env } from "@nova/env/server";
 import { initLogger } from "evlog";
-import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
-import { evlog, type EvlogVariables } from "evlog/hono";
+import {
+  type BetterAuthInstance,
+  createAuthMiddleware,
+} from "evlog/better-auth";
+import { type EvlogVariables, evlog } from "evlog/hono";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 
@@ -29,17 +32,20 @@ app.use("*", async (c, next) => {
 app.use(
   "/*",
   cors({
-    origin: env.CORS_ORIGIN,
-    allowMethods: ["GET", "POST", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
+    allowMethods: ["GET", "POST", "OPTIONS"],
     credentials: true,
-  }),
+    origin: env.CORS_ORIGIN,
+  })
 );
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 const nativeAppUrl = "nova://";
-const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+const allowedNativeProtocols = new Set([
+  "exp:",
+  new URL(nativeAppUrl).protocol,
+]);
 
 app.get("/polar/success", (c) => {
   const requestUrl = new URL(c.req.url);
@@ -62,15 +68,11 @@ app.get("/polar/success", (c) => {
 app.use(
   "/trpc/*",
   trpcServer({
+    createContext: (_opts, context) => createContext({ context }),
     router: appRouter,
-    createContext: (_opts, context) => {
-      return createContext({ context });
-    },
-  }),
+  })
 );
 
-app.get("/", (c) => {
-  return c.text("OK");
-});
+app.get("/", (c) => c.text("OK"));
 
 export default app;

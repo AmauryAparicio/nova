@@ -29,6 +29,18 @@ export default function UserMenu() {
     );
   }
 
+  const handleSignOut = () => {
+    authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          navigate({
+            to: "/",
+          });
+        },
+      },
+    });
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button variant="outline" />}>
@@ -39,20 +51,7 @@ export default function UserMenu() {
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem>{session.user.email}</DropdownMenuItem>
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => {
-              authClient.signOut({
-                fetchOptions: {
-                  onSuccess: () => {
-                    navigate({
-                      to: "/",
-                    });
-                  },
-                },
-              });
-            }}
-          >
+          <DropdownMenuItem onClick={handleSignOut} variant="destructive">
             Sign Out
           </DropdownMenuItem>
         </DropdownMenuGroup>
