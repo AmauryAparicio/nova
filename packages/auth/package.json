@@ -11,6 +11,7 @@
   },
   "scripts": {},
   "dependencies": {
+    "@better-auth/api-key": "^1.6.23",
     "@better-auth/expo": "catalog:",
     "@nova/db": "workspace:*",
     "@nova/env": "workspace:*",
