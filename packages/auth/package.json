@@ -9,8 +9,12 @@
       "default": "./src/*.ts"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "check-types": "tsc -b",
+    "lint": "ultracite check ."
+  },
   "dependencies": {
+    "@better-auth/api-key": "^1.6.23",
     "@better-auth/expo": "catalog:",
     "@nova/db": "workspace:*",
     "@nova/env": "workspace:*",

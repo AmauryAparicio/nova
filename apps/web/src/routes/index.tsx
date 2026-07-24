@@ -23,9 +23,21 @@ const TITLE_TEXT = `
     ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
  `;
 
+function getApiStatusLabel(isLoading: boolean, isConnected: boolean) {
+  if (isLoading) {
+    return "Checking...";
+  }
+  if (isConnected) {
+    return "Connected";
+  }
+  return "Disconnected";
+}
+
 function HomeComponent() {
   const trpc = useTRPC();
   const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+  const isConnected = Boolean(healthCheck.data);
+  const apiStatusLabel = getApiStatusLabel(healthCheck.isLoading, isConnected);
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-2">
@@ -35,14 +47,10 @@ function HomeComponent() {
           <h2 className="mb-2 font-medium">API Status</h2>
           <div className="flex items-center gap-2">
             <div
-              className={`h-2 w-2 rounded-full ${healthCheck.data ? "bg-green-500" : "bg-red-500"}`}
+              className={`h-2 w-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`}
             />
             <span className="text-muted-foreground text-sm">
-              {healthCheck.isLoading
-                ? "Checking..."
-                : healthCheck.data
-                  ? "Connected"
-                  : "Disconnected"}
+              {apiStatusLabel}
             </span>
           </div>
         </section>

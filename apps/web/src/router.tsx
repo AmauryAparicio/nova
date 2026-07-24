@@ -32,7 +32,9 @@ function getServerUrl(url: string) {
       ? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
       : (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
   if (vercelUrl) {
-    const origin = vercelUrl.startsWith("http") ? vercelUrl : `https://${vercelUrl}`;
+    const origin = vercelUrl.startsWith("http")
+      ? vercelUrl
+      : `https://${vercelUrl}`;
     return `${origin}${normalized}`;
   }
 
@@ -40,6 +42,7 @@ function getServerUrl(url: string) {
 }
 function createQueryClient() {
   return new QueryClient({
+    defaultOptions: { queries: { staleTime: 60 * 1000 } },
     queryCache: new QueryCache({
       onError: (error, query) => {
         toast.error(error.message, {
@@ -52,20 +55,24 @@ function createQueryClient() {
         });
       },
     }),
-    defaultOptions: { queries: { staleTime: 60 * 1000 } },
   });
 }
 
 const trpcClient = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
-      url: `${getServerUrl(env.VITE_SERVER_URL)}/trpc`,
-      fetch(url, options) {
-        return fetch(url, {
+      // `fetch` here is the httpBatchLink option key (required by @trpc/client's
+      // HTTPLinkBaseOptions type), not a self-reference. The `fetch(...)` call
+      // inside resolves to the global fetch. Biome's noParametersOnlyUsedInRecursion
+      // misreads this as recursion because the names match; `_url` (its own
+      // suggested fix) silences the false positive without changing behavior.
+      fetch(_url, options) {
+        return fetch(_url, {
           ...options,
           credentials: "include",
         });
       },
+      url: `${getServerUrl(env.VITE_SERVER_URL)}/trpc`,
     }),
   ],
 });
@@ -78,22 +85,22 @@ export const getRouter = () => {
   });
 
   const router = createTanStackRouter({
+    context: { queryClient, trpc },
+    defaultNotFoundComponent: () => <div>Not Found</div>,
+    defaultPendingComponent: () => <Loader />,
+    defaultPreloadStaleTime: 0,
     routeTree,
     scrollRestoration: true,
-    defaultPreloadStaleTime: 0,
-    context: { trpc, queryClient },
-    defaultPendingComponent: () => <Loader />,
-    defaultNotFoundComponent: () => <div>Not Found</div>,
     Wrap: ({ children }) => (
-      <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+      <TRPCProvider queryClient={queryClient} trpcClient={trpcClient}>
         {children}
       </TRPCProvider>
     ),
   });
 
   setupRouterSsrQueryIntegration({
-    router,
     queryClient,
+    router,
   });
 
   return router;

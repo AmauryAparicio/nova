@@ -6,6 +6,8 @@
     "build": "vite build",
     "serve": "vite preview",
     "dev": "vite dev",
+    "check-types": "tsc --noEmit",
+    "lint": "ultracite check .",
     "tauri": "tauri",
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build"

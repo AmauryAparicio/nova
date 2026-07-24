@@ -3,14 +3,15 @@
  * Get complete component documentation (MDX) for HeroUI Native components.
  *
  * Usage:
- *   node get_component_docs.mjs Button
- *   node get_component_docs.mjs Button Card TextField
+ *   node get-component-docs.mjs Button
+ *   node get-component-docs.mjs Button Card TextField
  *
  * Output:
  *   MDX documentation including imports, usage, variants, props, examples
  */
 
-const API_BASE = process.env.HEROUI_NATIVE_API_BASE || "https://native-mcp-api.heroui.com";
+const API_BASE =
+  process.env.HEROUI_NATIVE_API_BASE || "https://native-mcp-api.heroui.com";
 const FALLBACK_BASE = "https://heroui.com";
 const APP_PARAM = "app=native-skills";
 
@@ -38,7 +39,7 @@ async function fetchApi(endpoint, method = "GET", body = null) {
         "User-Agent": "HeroUI-Native-Skill/1.0",
       },
       method,
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(30_000),
     };
 
     if (body) {
@@ -67,7 +68,7 @@ async function fetchFallback(component) {
   try {
     const response = await fetch(url, {
       headers: { "User-Agent": "HeroUI-Native-Skill/1.0" },
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(30_000),
     });
 
     if (!response.ok) {
@@ -95,8 +96,10 @@ async function main() {
   const args = process.argv.slice(2);
 
   if (args.length === 0) {
-    console.error("Usage: node get_component_docs.mjs <Component1> [Component2] ...");
-    console.error("Example: node get_component_docs.mjs Button Card");
+    console.error(
+      "Usage: node get-component-docs.mjs <Component1> [Component2] ..."
+    );
+    console.error("Example: node get-component-docs.mjs Button Card");
     process.exit(1);
   }
 
@@ -106,11 +109,11 @@ async function main() {
   console.error(`# Fetching Native docs for: ${components.join(", ")}...`);
   const data = await fetchApi("/v1/components/docs", "POST", { components });
 
-  if (data && data.results) {
+  if (data?.results) {
     // Output results
     if (data.results.length === 1) {
       // Single component - output content directly for easier reading
-      const result = data.results[0];
+      const [result] = data.results;
 
       if (result.content) {
         console.log(result.content);
@@ -130,18 +133,14 @@ async function main() {
 
   // Fallback to individual component fetches
   console.error("# API failed, using fallback...");
-  const results = [];
-
-  for (const component of components) {
-    const result = await fetchFallback(component);
-
-    results.push(result);
-  }
+  const results = await Promise.all(
+    components.map((component) => fetchFallback(component))
+  );
 
   // Output results
   if (results.length === 1) {
     // Single component - output content directly for easier reading
-    const result = results[0];
+    const [result] = results;
 
     if (result.content) {
       console.log(result.content);

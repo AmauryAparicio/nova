@@ -13,7 +13,9 @@
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "check-types": "tsc -b",
+    "lint": "ultracite check ."
   },
   "dependencies": {
     "@nova/env": "workspace:*",
@@ -25,7 +27,7 @@
   "devDependencies": {
     "@nova/config": "workspace:*",
     "@types/pg": "catalog:",
-    "drizzle-kit": "^0.31.10",
+    "drizzle-kit": "1.0.0-rc.4",
     "typescript": "^6"
   }
 }
