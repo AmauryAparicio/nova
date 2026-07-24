@@ -9,7 +9,9 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "prebuild": "expo prebuild",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "check-types": "tsc --noEmit",
+    "lint": "ultracite check ."
   },
   "dependencies": {
     "@better-auth/expo": "catalog:",

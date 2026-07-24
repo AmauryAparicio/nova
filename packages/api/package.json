@@ -9,7 +9,10 @@
       "default": "./src/*.ts"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "check-types": "tsc -b",
+    "lint": "ultracite check ."
+  },
   "dependencies": {
     "@nova/auth": "workspace:*",
     "@nova/db": "workspace:*",
